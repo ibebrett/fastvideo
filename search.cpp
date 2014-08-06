@@ -69,16 +69,10 @@ int checkFrame(AVFrame* pFrame, vector<CImg<uint8_t>*> screenshots, int width, i
     pImage.assign(*pFrame->data, 3, width, height, 1, true);
     pImage.permute_axes("yzcx");
 
-
-    stringstream ss;
     for(vector<CImg<uint8_t>*>::iterator it1 = screenshots.begin(); it1 != screenshots.end(); ++it1) { 
         int diff = regionedDiff((*it1), &pImage, 30, 30);
         if(diff < 500.0) {
             return 1;
-            //CImgDisplay video_disp(pImage, "video");
-            //CImgDisplay screenshot_disp(*(*it1), "screenshot");
-            //while(!video_disp.is_closed() && !screenshot_disp.is_closed())
-            //    video_disp.wait();
         }
     }
 
