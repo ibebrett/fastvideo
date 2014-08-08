@@ -76,7 +76,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = fvsearch$(EXEEXT)
+bin_PROGRAMS = fvsearch$(EXEEXT) fvscreenshot$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -90,9 +90,13 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
+am_fvscreenshot_OBJECTS = fvscreenshot-screenshot.$(OBJEXT)
+fvscreenshot_OBJECTS = $(am_fvscreenshot_OBJECTS)
+am__DEPENDENCIES_1 =
+fvscreenshot_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am_fvsearch_OBJECTS = fvsearch-search.$(OBJEXT)
 fvsearch_OBJECTS = $(am_fvsearch_OBJECTS)
-am__DEPENDENCIES_1 =
 fvsearch_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
@@ -127,8 +131,8 @@ AM_V_CXXLD = $(am__v_CXXLD_$(V))
 am__v_CXXLD_ = $(am__v_CXXLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(fvsearch_SOURCES)
-DIST_SOURCES = $(fvsearch_SOURCES)
+SOURCES = $(fvscreenshot_SOURCES) $(fvsearch_SOURCES)
+DIST_SOURCES = $(fvscreenshot_SOURCES) $(fvsearch_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -154,13 +158,13 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/brett/proj/fastvideo/missing aclocal-1.14
+ACLOCAL = ${SHELL} /Users/brett/proj/fastvideo/missing aclocal-1.14
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
-AUTOCONF = ${SHELL} /home/brett/proj/fastvideo/missing autoconf
-AUTOHEADER = ${SHELL} /home/brett/proj/fastvideo/missing autoheader
-AUTOMAKE = ${SHELL} /home/brett/proj/fastvideo/missing automake-1.14
-AWK = mawk
+AUTOCONF = ${SHELL} /Users/brett/proj/fastvideo/missing autoconf
+AUTOHEADER = ${SHELL} /Users/brett/proj/fastvideo/missing autoheader
+AUTOMAKE = ${SHELL} /Users/brett/proj/fastvideo/missing automake-1.14
+AWK = awk
 CPPFLAGS = 
 CXX = g++
 CXXCPP = g++ -E
@@ -169,14 +173,14 @@ CXXFLAGS = -g -O2
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
-ECHO_C = 
-ECHO_N = -n
+ECHO_C = \c
+ECHO_N = 
 ECHO_T = 
-EGREP = /bin/grep -E
+EGREP = /usr/bin/grep -E
 EXEEXT = 
-FFMPEG_CFLAGS = -I/home/brett/ffmpeg_build/include  
-FFMPEG_LIBS = -pthread -L/home/brett/ffmpeg_build/lib -lavdevice -lavfilter -lpostproc -lavformat -lavcodec -lva -lX11 -lasound -lSDL -lx264 -lvpx -lvorbisenc -lvorbis -ltheoraenc -ltheoradec -logg -lopus -lmp3lame -lfdk-aac -lass -lz -ldl -lswresample -lswscale -lavutil -lm  
-GREP = /bin/grep
+FFMPEG_CFLAGS = -I/opt/local/include 
+FFMPEG_LIBS = -L/opt/local/lib -lavformat -lavdevice -lavfilter -lavcodec -lswresample -lswscale -lavutil 
+GREP = /usr/bin/grep
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -186,8 +190,8 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/brett/proj/fastvideo/missing makeinfo
-MKDIR_P = /bin/mkdir -p
+MAKEINFO = ${SHELL} /Users/brett/proj/fastvideo/missing makeinfo
+MKDIR_P = /usr/local/bin/gmkdir -p
 OBJEXT = o
 PACKAGE = fastvideo
 PACKAGE_BUGREPORT = i.be.brett@gmail.com
@@ -197,19 +201,19 @@ PACKAGE_TARNAME = fastvideo
 PACKAGE_URL = 
 PACKAGE_VERSION = 0.1
 PATH_SEPARATOR = :
-PKG_CONFIG = /usr/bin/pkg-config
+PKG_CONFIG = /opt/local/bin/pkg-config
 PKG_CONFIG_LIBDIR = 
-PKG_CONFIG_PATH = /home/brett/ffmpeg_build/lib/pkgconfig:
+PKG_CONFIG_PATH = 
 SET_MAKE = 
-SHELL = /bin/bash
+SHELL = /bin/sh
 STRIP = 
 VERSION = 0.1
-X11_CFLAGS =  
-X11_LIBS = -lX11  
-abs_builddir = /home/brett/proj/fastvideo/src
-abs_srcdir = /home/brett/proj/fastvideo/src
-abs_top_builddir = /home/brett/proj/fastvideo
-abs_top_srcdir = /home/brett/proj/fastvideo
+X11_CFLAGS = -I/opt/local/include 
+X11_LIBS = -L/opt/local/lib -lX11 
+abs_builddir = /Users/brett/proj/fastvideo/src
+abs_srcdir = /Users/brett/proj/fastvideo/src
+abs_top_builddir = /Users/brett/proj/fastvideo
+abs_top_srcdir = /Users/brett/proj/fastvideo
 ac_ct_CXX = g++
 am__include = include
 am__leading_dot = .
@@ -228,7 +232,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/brett/proj/fastvideo/install-sh
+install_sh = ${SHELL} /Users/brett/proj/fastvideo/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -251,6 +255,9 @@ top_srcdir = ..
 fvsearch_SOURCES = search.cpp
 fvsearch_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
 fvsearch_LDADD = $(X11_LIBS) $(FFMPEG_LIBS)
+fvscreenshot_SOURCES = screenshot.cpp
+fvscreenshot_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
+fvscreenshot_LDADD = $(X11_LIBS) $(FFMPEG_LIBS) 
 all: all-am
 
 .SUFFIXES:
@@ -328,6 +335,10 @@ uninstall-binPROGRAMS:
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 
+fvscreenshot$(EXEEXT): $(fvscreenshot_OBJECTS) $(fvscreenshot_DEPENDENCIES) $(EXTRA_fvscreenshot_DEPENDENCIES) 
+	@rm -f fvscreenshot$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fvscreenshot_OBJECTS) $(fvscreenshot_LDADD) $(LIBS)
+
 fvsearch$(EXEEXT): $(fvsearch_OBJECTS) $(fvsearch_DEPENDENCIES) $(EXTRA_fvsearch_DEPENDENCIES) 
 	@rm -f fvsearch$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fvsearch_OBJECTS) $(fvsearch_LDADD) $(LIBS)
@@ -338,6 +349,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ./$(DEPDIR)/fvscreenshot-screenshot.Po
 include ./$(DEPDIR)/fvsearch-search.Po
 
 .cpp.o:
@@ -353,6 +365,20 @@ include ./$(DEPDIR)/fvsearch-search.Po
 #	$(AM_V_CXX)source='$<' object='$@' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
 #	$(AM_V_CXX_no)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+fvscreenshot-screenshot.o: screenshot.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvscreenshot-screenshot.o -MD -MP -MF $(DEPDIR)/fvscreenshot-screenshot.Tpo -c -o fvscreenshot-screenshot.o `test -f 'screenshot.cpp' || echo '$(srcdir)/'`screenshot.cpp
+	$(AM_V_at)$(am__mv) $(DEPDIR)/fvscreenshot-screenshot.Tpo $(DEPDIR)/fvscreenshot-screenshot.Po
+#	$(AM_V_CXX)source='screenshot.cpp' object='fvscreenshot-screenshot.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvscreenshot-screenshot.o `test -f 'screenshot.cpp' || echo '$(srcdir)/'`screenshot.cpp
+
+fvscreenshot-screenshot.obj: screenshot.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvscreenshot-screenshot.obj -MD -MP -MF $(DEPDIR)/fvscreenshot-screenshot.Tpo -c -o fvscreenshot-screenshot.obj `if test -f 'screenshot.cpp'; then $(CYGPATH_W) 'screenshot.cpp'; else $(CYGPATH_W) '$(srcdir)/screenshot.cpp'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/fvscreenshot-screenshot.Tpo $(DEPDIR)/fvscreenshot-screenshot.Po
+#	$(AM_V_CXX)source='screenshot.cpp' object='fvscreenshot-screenshot.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvscreenshot-screenshot.obj `if test -f 'screenshot.cpp'; then $(CYGPATH_W) 'screenshot.cpp'; else $(CYGPATH_W) '$(srcdir)/screenshot.cpp'; fi`
 
 fvsearch-search.o: search.cpp
 	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvsearch_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvsearch-search.o -MD -MP -MF $(DEPDIR)/fvsearch-search.Tpo -c -o fvsearch-search.o `test -f 'search.cpp' || echo '$(srcdir)/'`search.cpp
