@@ -8,15 +8,19 @@ AC_CONFIG_FILES([
  src/Makefile
 ])
 
+AX_BOOST_BASE([1.46])
+AX_BOOST_PROGRAM_OPTIONS
+
+
 PKG_CHECK_MODULES([FFMPEG], [
-	libavdevice,
-	libavformat,
-	libavdevice,
-	libavfilter,
-	libavcodec,
-	libswresample,
-	libswscale, 
-	libavutil
+    libavdevice,
+    libavformat,
+    libavdevice,
+    libavfilter,
+    libavcodec,
+    libswresample,
+    libswscale, 
+    libavutil
 ])
 
 PKG_CHECK_MODULES(X11, [x11])

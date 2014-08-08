@@ -17,8 +17,55 @@ using namespace cimg_library;
 #include <set>
 #include <vector>
 #include <cmath>
+#include <list>
 
 using namespace std;
+
+#include <boost/program_options.hpp>
+
+struct search_context {
+    int time_limit;
+    int compare_limit;
+    int screenshot_limit;
+
+    std::vector<std::string> screenshot_paths;
+    std::string video_path;
+
+    void parse_command_line(int argc, char** argv) {
+        namespace po = boost::program_options;
+        po::options_description desc("Options");
+
+        desc.add_options()
+            ("time-limit",       po::value<int>()->default_value(5*60), "maximum time to search video for screenshots")
+            ("compare-limit",    po::value<int>()->default_value(4),    "histogram value threshold for comparing screenshots to video")
+            ("screenshot-limit", po::value<int>()->default_value(10),   "histogram value threshold to include screenshot in comparisons")
+            ("video",            po::value<std::string>(),  "video file")
+            ("screenshots",      po::value<std::vector<std::string> >(), "screenshots"); 
+
+        po::positional_options_description pos_desc;
+        pos_desc.add("video", 1);
+        pos_desc.add("screenshots", -1);
+        po::variables_map vm;
+
+        try {
+            po::store(po::command_line_parser(argc, argv).options(desc).positional(pos_desc).run(),  vm);
+            po::notify(vm);
+        } catch(po::error& e) {
+            std::cerr << "Error during parsing:" << e.what() << std::endl;
+        }
+
+        this->time_limit       = vm["time-limit"].as<int>();
+        this->compare_limit    = vm["compare-limit"].as<int>();
+        this->screenshot_limit = vm["screenshot-limit"].as<int>();
+        this->video_path       = vm["video"].as<std::string>();
+        this->screenshot_paths = vm["screenshots"].as<std::vector<std::string> >();
+    }
+};
+
+int main(int argc, char** argv) {
+    search_context sc;
+    sc.parse_command_line(argc, argv);
+}
 
 inline uint32_t getImagePixel(CImg<uint8_t>* pImage, int x, int y) {
     uint32_t rgb = (uint32_t)(*pImage)(x,y,0,0);
@@ -26,7 +73,6 @@ inline uint32_t getImagePixel(CImg<uint8_t>* pImage, int x, int y) {
     rgb = (rgb << 8) + (uint32_t)(*pImage)(x,y,0,2);
     return rgb;
 }
-
 
 int pixelDiff(CImg<uint8_t>* pImage1, CImg<uint8_t>* pImage2, int x, int y) {
     // take difference between rg,b
@@ -91,7 +137,7 @@ vector<CImg<uint8_t>*> loadScreenshots(char** argv, int start, int argc) {
     return screenshots;
 }
 
-int main(int argc, char *argv[]) {
+int main2(int argc, char *argv[]) {
   AVFormatContext *pFormatCtx = NULL;
   int             i, videoStream;
   AVCodecContext  *pCodecCtx = NULL;

@@ -94,10 +94,11 @@ am_fvscreenshot_OBJECTS = fvscreenshot-screenshot.$(OBJEXT)
 fvscreenshot_OBJECTS = $(am_fvscreenshot_OBJECTS)
 am__DEPENDENCIES_1 =
 fvscreenshot_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am_fvsearch_OBJECTS = fvsearch-search.$(OBJEXT)
 fvsearch_OBJECTS = $(am_fvsearch_OBJECTS)
-fvsearch_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+fvsearch_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -165,6 +166,12 @@ AUTOCONF = ${SHELL} /Users/brett/proj/fastvideo/missing autoconf
 AUTOHEADER = ${SHELL} /Users/brett/proj/fastvideo/missing autoheader
 AUTOMAKE = ${SHELL} /Users/brett/proj/fastvideo/missing automake-1.14
 AWK = awk
+BOOST_CPPFLAGS = -I/opt/local/include
+BOOST_LDFLAGS = -L/opt/local/lib
+BOOST_PROGRAM_OPTIONS_LIB = -lboost_program_options-mt
+CC = gcc
+CCDEPMODE = depmode=gcc3
+CFLAGS = -g -O2
 CPPFLAGS = 
 CXX = g++
 CXXCPP = g++ -E
@@ -214,6 +221,7 @@ abs_builddir = /Users/brett/proj/fastvideo/src
 abs_srcdir = /Users/brett/proj/fastvideo/src
 abs_top_builddir = /Users/brett/proj/fastvideo
 abs_top_srcdir = /Users/brett/proj/fastvideo
+ac_ct_CC = gcc
 ac_ct_CXX = g++
 am__include = include
 am__leading_dot = .
@@ -254,10 +262,10 @@ top_builddir = ..
 top_srcdir = ..
 fvsearch_SOURCES = search.cpp
 fvsearch_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
-fvsearch_LDADD = $(X11_LIBS) $(FFMPEG_LIBS)
+fvsearch_LDADD = $(X11_LIBS) $(FFMPEG_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB)
 fvscreenshot_SOURCES = screenshot.cpp
 fvscreenshot_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
-fvscreenshot_LDADD = $(X11_LIBS) $(FFMPEG_LIBS) 
+fvscreenshot_LDADD = $(X11_LIBS) $(FFMPEG_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB)
 all: all-am
 
 .SUFFIXES:

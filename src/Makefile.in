@@ -94,10 +94,11 @@ am_fvscreenshot_OBJECTS = fvscreenshot-screenshot.$(OBJEXT)
 fvscreenshot_OBJECTS = $(am_fvscreenshot_OBJECTS)
 am__DEPENDENCIES_1 =
 fvscreenshot_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am_fvsearch_OBJECTS = fvsearch-search.$(OBJEXT)
 fvsearch_OBJECTS = $(am_fvsearch_OBJECTS)
-fvsearch_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+fvsearch_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -165,6 +166,12 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
+BOOST_LDFLAGS = @BOOST_LDFLAGS@
+BOOST_PROGRAM_OPTIONS_LIB = @BOOST_PROGRAM_OPTIONS_LIB@
+CC = @CC@
+CCDEPMODE = @CCDEPMODE@
+CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
@@ -214,6 +221,7 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
@@ -254,10 +262,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 fvsearch_SOURCES = search.cpp
 fvsearch_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
-fvsearch_LDADD = $(X11_LIBS) $(FFMPEG_LIBS)
+fvsearch_LDADD = $(X11_LIBS) $(FFMPEG_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB)
 fvscreenshot_SOURCES = screenshot.cpp
 fvscreenshot_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
-fvscreenshot_LDADD = $(X11_LIBS) $(FFMPEG_LIBS) 
+fvscreenshot_LDADD = $(X11_LIBS) $(FFMPEG_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB)
 all: all-am
 
 .SUFFIXES:
