@@ -6,7 +6,6 @@ extern "C" {
     #include <libswscale/swscale.h>
 }
 
-#include <stdio.h>
 #include <CImg.h>
 
 using namespace cimg_library;
@@ -19,19 +18,24 @@ using namespace cimg_library;
 #include <cmath>
 #include <list>
 
-using namespace std;
-
 #include <boost/program_options.hpp>
+
+#include "image_process.hpp"
+#include "video_process.hpp"
 
 struct search_context {
     int time_limit;
     int compare_limit;
     int screenshot_limit;
+    int match_limit;
+    int width;
+    int height;
+    bool debug_matches;
 
     std::vector<std::string> screenshot_paths;
     std::string video_path;
 
-    void parse_command_line(int argc, char** argv) {
+    int parse_command_line(int argc, char** argv) {
         namespace po = boost::program_options;
         po::options_description desc("Options");
 
@@ -39,6 +43,10 @@ struct search_context {
             ("time-limit",       po::value<int>()->default_value(5*60), "maximum time to search video for screenshots")
             ("compare-limit",    po::value<int>()->default_value(4),    "histogram value threshold for comparing screenshots to video")
             ("screenshot-limit", po::value<int>()->default_value(10),   "histogram value threshold to include screenshot in comparisons")
+            ("match-limit",      po::value<int>()->default_value(500),  "value to consider a screenshot and frame matchign")
+            ("width",            po::value<int>()->default_value(30),   "width when rescaling images")
+            ("height",           po::value<int>()->default_value(30),   "height when rescaling images")
+            ("debug-matches",    po::bool_switch(),                     "save matching screenshots")
             ("video",            po::value<std::string>(),  "video file")
             ("screenshots",      po::value<std::vector<std::string> >(), "screenshots"); 
 
@@ -51,228 +59,109 @@ struct search_context {
             po::store(po::command_line_parser(argc, argv).options(desc).positional(pos_desc).run(),  vm);
             po::notify(vm);
         } catch(po::error& e) {
-            std::cerr << "Error during parsing:" << e.what() << std::endl;
+            std::cerr << "Error during parsing" << std::endl;
+            std::cerr << desc;
+            return 1;
         }
 
         this->time_limit       = vm["time-limit"].as<int>();
         this->compare_limit    = vm["compare-limit"].as<int>();
         this->screenshot_limit = vm["screenshot-limit"].as<int>();
+        this->match_limit      = vm["match-limit"].as<int>();
+        this->width            = vm["width"].as<int>();
+        this->height           = vm["height"].as<int>();
+        this->debug_matches    = vm["debug-matches"].as<bool>();
         this->video_path       = vm["video"].as<std::string>();
         this->screenshot_paths = vm["screenshots"].as<std::vector<std::string> >();
+
+        return 0;
     }
 };
 
+class search_video_worker : public video_worker {
+    const search_context &sc;
+    std::vector<CImg8> screenshots;
+    int matched_frames;
+
+    protected:
+        void load_screenshots();
+        void save_debug_frames(const CImg8 &sreenshot, const CImg8 &frame, int frame_count);
+
+    public:
+        int get_score() { 
+            return matched_frames;
+        }
+
+        virtual void process_frame(const CImg8 &frame, int frame_count);
+
+        search_video_worker(const search_context &sc) : sc(sc), matched_frames(0) {
+            load_screenshots();
+        }
+};
+
+void search_video_worker::save_debug_frames(const CImg8 &screenshot, const CImg8 &frame, int frame_count) {
+    std::stringstream ss;
+    ss << frame_count << "-frame.png";
+    frame.save(ss.str().c_str());
+    ss.str("");
+
+    ss << frame_count << "-screenshot.png";
+    screenshot.save(ss.str().c_str());
+}
+
+void search_video_worker::process_frame(const CImg8 &frame, int frame_count) {
+    for(std::vector<CImg8>::const_iterator it = screenshots.begin();
+        it != screenshots.end();
+        it++) {
+        
+        int diff = regioned_diff(*it, frame, frame.width(), frame.height(), sc.compare_limit);
+        if(diff >= 0 && diff <= sc.match_limit) {
+            matched_frames+=1;
+            if(sc.debug_matches) {
+                std::cerr << "frames matching " << frame_count << " with diff " << diff << std::endl;
+                save_debug_frames(*it, frame, frame_count);
+            }
+            break;
+        }
+    }
+}
+
+void search_video_worker::load_screenshots() {
+    // load the screenshots - and filter them
+    for(std::vector<std::string>::const_iterator it = sc.screenshot_paths.begin();
+        it != sc.screenshot_paths.end();
+        it++) {
+
+        CImg8 new_image;
+        new_image.load((*it).c_str());
+
+        new_image.resize(sc.width, sc.height);
+
+        // see if this image passes a histogram test
+        if(get_unique_colors(new_image) >= sc.screenshot_limit) {
+            screenshots.push_back(new_image);
+        }
+    }
+
+    std::cerr << "loaded " << sc.screenshot_paths.size() << " screenshots and " << screenshots.size() << " passed the histogram test" << std::endl;
+}
+
 int main(int argc, char** argv) {
     search_context sc;
+
     sc.parse_command_line(argc, argv);
-}
 
-inline uint32_t getImagePixel(CImg<uint8_t>* pImage, int x, int y) {
-    uint32_t rgb = (uint32_t)(*pImage)(x,y,0,0);
-    rgb = (rgb << 8) + (uint32_t)(*pImage)(x,y,0,1);
-    rgb = (rgb << 8) + (uint32_t)(*pImage)(x,y,0,2);
-    return rgb;
-}
+    search_video_worker worker(sc);
+    video_processor processor;
 
-int pixelDiff(CImg<uint8_t>* pImage1, CImg<uint8_t>* pImage2, int x, int y) {
-    // take difference between rg,b
-    uint8_t r_diff = abs(((*pImage1)(x,y,0,0)-(*pImage2)(x,y,0,0)))/4;
-    uint8_t g_diff = abs(((*pImage1)(x,y,0,1)-(*pImage2)(x,y,0,1)))/4;
-    uint8_t b_diff = abs(((*pImage1)(x,y,0,2)-(*pImage2)(x,y,0,2)))/4;
-    
-    return r_diff + g_diff + b_diff;
-}
-
-int diffRegion(CImg<uint8_t>* pImage1, CImg<uint8_t>* pImage2, int sx, int sy, int width, int height) {
-    int sum = 0;
-    for(int x = sx; x < sx+width; x++) {
-        for(int y = sy; y < sy+height; y++) {
-            sum += pixelDiff(pImage1, pImage2, x, y);
-        }
-    }
-    return sum;
-}
-
-int regionedDiff(CImg<uint8_t>* pImage1, CImg<uint8_t>* pImage2, int width, int height) {   
-    int smallest = -1;
-   
-    for(int base_y = 0; base_y < 30; base_y+=10) {
-        for( int base_x = 0; base_x < 30; base_x+=10) {
-            int diff = diffRegion(pImage1, pImage2, base_x, base_y, 10, 10);
-            if(smallest == -1 || diff < smallest) {
-                smallest = diff;
-            }
-        }
-    }
-
-    return smallest;
-}
-
-int checkFrame(AVFrame* pFrame, vector<CImg<uint8_t>*> screenshots, int width, int height) {
-    // first get from the frame
-    CImg<uint8_t> pImage;// new CImg<uint8_t>();
-
-    pImage.assign(*pFrame->data, 3, width, height, 1, true);
-    pImage.permute_axes("yzcx");
-
-    for(vector<CImg<uint8_t>*>::iterator it1 = screenshots.begin(); it1 != screenshots.end(); ++it1) { 
-        int diff = regionedDiff((*it1), &pImage, 30, 30);
-        if(diff < 500.0) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-vector<CImg<uint8_t>*> loadScreenshots(char** argv, int start, int argc) {
-    vector<CImg<uint8_t>*> screenshots;
-    
-    for(int i = start; i < argc; i++) {
-        CImg<uint8_t>* pNewImage = new CImg<uint8_t>();
-        pNewImage->load(argv[i]);
-        pNewImage->resize(30, 30); // resize using fastest resize algo 
-        screenshots.push_back(pNewImage);
-    }
-    return screenshots;
-}
-
-int main2(int argc, char *argv[]) {
-  AVFormatContext *pFormatCtx = NULL;
-  int             i, videoStream;
-  AVCodecContext  *pCodecCtx = NULL;
-  AVCodec         *pCodec = NULL;
-  AVFrame         *pFrame = NULL; 
-  AVFrame         *pFrameRGB = NULL;
-  AVPacket        packet;
-  int             frameFinished;
-  int             numBytes;
-  uint8_t         *buffer = NULL;
-
-  AVDictionary    *optionsDict = NULL;
-  struct SwsContext      *sws_ctx = NULL;
- 
-  vector<CImg<uint8_t>*> screenshots = loadScreenshots(argv, 2, argc);
-
-  // Register all formats and codecs
-  av_register_all();
-  
-  // Open video file
-  if(avformat_open_input(&pFormatCtx, argv[1], NULL, NULL)!=0)
-    return -1; // Couldn't open file
-  
-  // Retrieve stream information
-  if(avformat_find_stream_info(pFormatCtx, NULL)<0)
-    return -1; // Couldn't find stream information
-  
-  // Find the first video stream
-  videoStream=-1;
-  for(i=0; i<pFormatCtx->nb_streams; i++)
-    if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
-      videoStream=i;
-      break;
-  }
-  if(videoStream==-1)
-    return -1; // Didn't find a video stream
-  
-  // Get a pointer to the codec context for the video stream
-  pCodecCtx=pFormatCtx->streams[videoStream]->codec;
-  //pCodecCtx->lowres=2;
-  //pCodecCtx->skip_frame=AVDISCARD_ALL;
-
-  // Find the decoder for the video stream
-  pCodec=avcodec_find_decoder(pCodecCtx->codec_id);
-  if(pCodec==NULL) {
-    fprintf(stderr, "Unsupported codec!\n");
-    return -1; // Codec not found
-  }
-  // Open codec
-  if(avcodec_open2(pCodecCtx, pCodec, &optionsDict)<0)
-    return -1; // Could not open codec
-  
-  // Allocate video frame
-  pFrame=av_frame_alloc();
-  
-  // Allocate an AVFrame structure
-  pFrameRGB=av_frame_alloc();
-  if(pFrameRGB==NULL)
-    return -1;
-  
-  // Determine required buffer size and allocate buffer
-  numBytes=avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width,
-                  pCodecCtx->height);
-  buffer=(uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
-
-  sws_ctx =
-    sws_getContext
-    (
-        pCodecCtx->width,
-        pCodecCtx->height,
-        pCodecCtx->pix_fmt,
-        30,//pCodecCtx->width,
-        30,//pCodecCtx->height,
-        PIX_FMT_RGB24,
-        SWS_BILINEAR,
-        NULL,
-        NULL,
-        NULL
+    processor.iterate(
+        worker,
+        sc.video_path,
+        0,
+        0,
+        0,
+        sc.width,
+        sc.height
     );
-  
-  // Assign appropriate parts of buffer to image planes in pFrameRGB
-  // Note that pFrameRGB is an AVFrame, but AVFrame is a superset
-  // of AVPicture
-  avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24,
-        30, 30);
-         
-         
-    // Read frames and save first five frames to disk
-    i=0;
-    int frames=0;
-    int total_matches=0;
-    while(av_read_frame(pFormatCtx, &packet)>=0) { 
-      // Is this a packet from the video stream?
-      if(packet.stream_index==videoStream) {
-    // Decode video frame
-        avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, 
-               &packet);
-      
-      // Did we get a video frame?
-      if(frameFinished) {
-        frames++;
-        if(frames % 5 == 0) {
-            // Convert the image from its native format to RGB
-            sws_scale
-            (
-                sws_ctx,
-                (uint8_t const * const *)pFrame->data,
-                pFrame->linesize,
-                0,
-                pCodecCtx->height,
-                pFrameRGB->data,
-                pFrameRGB->linesize
-            );
-            total_matches += checkFrame(pFrameRGB, screenshots, 30, 30);
-        }
-     }
-     i++;
-    }
-    
-    // Free the packet that was allocated by av_read_frame
-    av_free_packet(&packet);
-  }
-  cout << i << " iterations " << frames << " frames " << (double)total_matches/(double)frames * 100.0 << endl;
-  // Free the RGB image
-  av_free(buffer);
-  av_free(pFrameRGB);
-  
-  // Free the YUV frame
-  av_free(pFrame);
-  
-  // Close the codec
-  avcodec_close(pCodecCtx);
-  
-  // Close the video file
-  avformat_close_input(&pFormatCtx);
-  
- return 0;
+    std::cout << worker.get_score();
 }
