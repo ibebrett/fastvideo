@@ -92,7 +92,7 @@ class search_video_worker : public video_worker {
             return matched_frames;
         }
 
-        virtual void process_frame(const CImg8 &frame, int frame_count);
+        virtual bool process_frame(const CImg8 &frame, int frame_count, int curr_time);
 
         search_video_worker(const search_context &sc) : sc(sc), matched_frames(0) {
             load_screenshots();
@@ -106,7 +106,7 @@ void search_video_worker::save_debug_frame(const std::string &prefix, const CImg
     frame.save(ss.str().c_str());
 }
 
-void search_video_worker::process_frame(const CImg8 &frame, int frame_count) {
+bool search_video_worker::process_frame(const CImg8 &frame, int frame_count, int curr_time) {
     for(std::vector<CImg8>::const_iterator it = screenshots.begin();
         it != screenshots.end();
         it++) {
@@ -125,6 +125,8 @@ void search_video_worker::process_frame(const CImg8 &frame, int frame_count) {
             break;
         }
     }
+
+    return true;
 }
 
 void search_video_worker::load_screenshots() {

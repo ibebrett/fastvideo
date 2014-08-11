@@ -16,7 +16,7 @@ using namespace cimg_library;
 
 class video_worker {
     public:
-        virtual void process_frame(const CImg8 &frame, int frame_count) = 0;
+        virtual bool process_frame(const CImg8 &frame, int frame_count, int curr_time) = 0; // return true to continue processing, false to stop
 };
 
 class video_processor {

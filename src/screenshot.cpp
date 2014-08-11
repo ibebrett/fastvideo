@@ -19,6 +19,7 @@ struct screenshot_context {
     int start_from;
     int frame_skip;
     int screenshot_limit;
+    int time_limit;
 
     std::string video_path;
     std::string screenshot_path;
@@ -31,6 +32,7 @@ struct screenshot_context {
             ("start-from",       po::value<int>()->default_value(60),   "start video this many seconds from the end")
             ("frame-skip",       po::value<int>()->default_value(5),    "skip frames during video processing")
             ("screenshot-limit", po::value<int>()->default_value(500),  "histogram limit to keep a screenshot")
+            ("time-limit",       po::value<int>()->default_value(60*2), "time in seconds to search the video")
             ("video",            po::value<std::string>(),              "video file to screenshot")
             ("screenshot",       po::value<std::string>(),              "output image"); 
 
@@ -50,6 +52,7 @@ struct screenshot_context {
 
         this->start_from      = vm["start-from"].as<int>();
         this->screenshot_limit = vm["screenshot-limit"].as<int>();
+        this->time_limit      = vm["time-limit"].as<int>();
         this->frame_skip      = vm["frame-skip"].as<int>();
         this->video_path      = vm["video"].as<std::string>();
         this->screenshot_path = vm["screenshot"].as<std::string>();
@@ -64,7 +67,7 @@ class screenshot_video_worker : public video_worker {
     bool   found_good_screenshot;
 
     public:
-        virtual void process_frame(const CImg8 &frame, int frame_count);
+        virtual bool process_frame(const CImg8 &frame, int frame_count, int curr_time);
 
         const CImg8 &get_screenshot() {
             return current_screenshot;
@@ -79,11 +82,13 @@ class screenshot_video_worker : public video_worker {
         }
 };
 
-void screenshot_video_worker::process_frame(const CImg8 &frame, int frame_count) {
+bool screenshot_video_worker::process_frame(const CImg8 &frame, int frame_count, int curr_time) {
     if(get_unique_colors(frame) >= sc.screenshot_limit) {
         found_good_screenshot = true;
         current_screenshot = frame;
     }
+
+    return true;
 }
 
 int main(int argc, char *argv[]) {

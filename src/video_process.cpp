@@ -113,12 +113,15 @@ int video_processor::iterate(
     } else if(start_from_back != 0) {
         seek_pos = pFormatCtx->duration - start_from_back*AV_TIME_BASE;
     }
+
     // rescale time
-    seek_pos = av_rescale_q(seek_pos, AV_TIME_BASE_Q,  pFormatCtx->streams[videoStream]->time_base);
     if(seek_pos < 0)
         seek_pos = 0;
 
     if(seek_pos != 0) {
+        seek_pos = av_rescale_q(seek_pos, AV_TIME_BASE_Q,
+                      pFormatCtx->streams[videoStream]->time_base);
+
         std::cerr << " seeking video to " << seek_pos << std::endl;
         int err = av_seek_frame(pFormatCtx, videoStream, seek_pos, 0);//, AVSEEK_FLAG_BACKWARD);
         if(err < 0) {
@@ -131,9 +134,10 @@ int video_processor::iterate(
     int total_matches=0;
 
     CImg8 image_frame;
+    bool processing = true;
     while(av_read_frame(pFormatCtx, &packet)>=0) { 
         // Is this a packet from the video stream?
-        if(packet.stream_index==videoStream) {
+        if(processing && packet.stream_index==videoStream) {
             // Decode video frame
             avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
 
@@ -151,11 +155,14 @@ int video_processor::iterate(
                         pFrameRGB->linesize
                     );
 
+                    // get the time
+                    int curr_time = av_rescale_q(packet.pts, AV_TIME_BASE_Q, pFormatCtx->streams[videoStream]->time_base);
+
                     // convert into CImg
                     image_frame.assign(*pFrameRGB->data, 3, width, height, 1, true);
                     image_frame.permute_axes("yzcx");
 
-                    worker.process_frame(image_frame, frames);
+                    processing = worker.process_frame(image_frame, frames, curr_time);
                 }
                 frames++;
             }
