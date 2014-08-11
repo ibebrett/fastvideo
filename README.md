@@ -9,3 +9,9 @@ fv_search - Compares a video to a list of noisy screenshots to determine the lik
 
 You need ffmpeg, CImg, and X11. To do conversions to useful formats it is preferable to have imagemagick installed (CImg will use it).
 
+For ffmpeg, building from source is the best bet; this guide for compiling on ubuntu works well:
+
+https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
+
+To build fast video, the ffmpeg libraries must be on the PKG_CONFIG_PATH. Additionally there seems to be a bug in ffmpeg that doesn't add librt as a dependancy for the ubuntu build of avutil. I suggest changing its package config file to contain the switch -lrt. 
+
