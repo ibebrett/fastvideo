@@ -126,7 +126,7 @@ bool search_video_worker::process_frame(const CImg8 &frame, int frame_count, int
         }
     }
 
-    return true;
+    return sc.time_limit == 0 || curr_time > sc.time_limit;
 }
 
 void search_video_worker::load_screenshots() {

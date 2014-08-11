@@ -123,7 +123,7 @@ int video_processor::iterate(
                       pFormatCtx->streams[videoStream]->time_base);
 
         std::cerr << " seeking video to " << seek_pos << std::endl;
-        int err = av_seek_frame(pFormatCtx, videoStream, seek_pos, 0);//, AVSEEK_FLAG_BACKWARD);
+        int err = av_seek_frame(pFormatCtx, videoStream, seek_pos, AVSEEK_FLAG_BACKWARD);
         if(err < 0) {
             print_error(err, "error during seek");
         }
