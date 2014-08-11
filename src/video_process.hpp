@@ -1,6 +1,8 @@
 #ifndef VIDEO_PROCESSOR_HPP
 #define VIDEO_PROCESSOR_HPP
 
+#define __STDC_CONSTANT_MACROS
+
 extern "C" {
     #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>

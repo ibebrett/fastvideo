@@ -1,6 +1,9 @@
 #ifndef IMAGE_PROCESS_HPP
 #define IMAGE_PROCESS_HPP
 
+#include <stdint.h>
+#define __STDC_CONSTANT_MACROS
+
 #include <CImg.h>
 
 using namespace cimg_library;
