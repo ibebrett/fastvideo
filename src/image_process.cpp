@@ -56,7 +56,7 @@ int regioned_diff(const CImg8 &image1, const CImg8 &image2, int width, int heigh
             int diff = diff_region(image1, image2, base_x, base_y, block_x, block_y);
             if(smallest == -1 || diff < smallest) {
                 // make sure the images pass the histogram test
-                if(get_unique_colors(image1) > hist_limit && get_unique_colors(image2))
+                if(get_unique_colors(image1) > hist_limit && get_unique_colors(image2) > hist_limit)
                     smallest = diff;
             }
         }

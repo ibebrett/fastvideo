@@ -118,7 +118,7 @@ bool search_video_worker::process_frame(const CImg8 &frame, int frame_count, int
         if(diff >= 0 && diff <= sc.match_limit) {
             matched_frames+=1;
             if(sc.debug_matches) {
-                std::cerr << "frames matching " << frame_count << " with diff " << diff << std::endl;
+                //std::cerr << "frames matching " << frame_count << " with diff " << diff << std::endl;
                 save_debug_frame("video-match", frame, frame_count);
                 save_debug_frame("screenshot-match", *it, frame_count);
             }
@@ -126,7 +126,7 @@ bool search_video_worker::process_frame(const CImg8 &frame, int frame_count, int
         }
     }
 
-    return sc.time_limit == 0 || curr_time > sc.time_limit;
+    return sc.time_limit == 0 || curr_time <= sc.time_limit;
 }
 
 void search_video_worker::load_screenshots() {
