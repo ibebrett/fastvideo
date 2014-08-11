@@ -1,12 +1,5 @@
 #define __STDC_CONSTANT_MACROS
 
-extern "C" {
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
-    #include <libswscale/swscale.h>
-}
-
-#include <stdio.h>
 #include <CImg.h>
 
 using namespace cimg_library;
@@ -14,199 +7,105 @@ using namespace cimg_library;
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <set>
-#include <cmath>
 
 using namespace std;
 
-CImg<uint8_t>* ProcessFrame(AVFrame *pFrame, int width, int height, CImg<uint8_t>* last_image) {
-    CImg<uint8_t>* next_image = new CImg<uint8_t>();
+#include <boost/program_options.hpp>
 
-    set<uint32_t> hist;
-    next_image->assign(*pFrame->data, 3, width, height, 1, true);
-    next_image->permute_axes("yzcx");
+#include "image_process.hpp"
+#include "video_process.hpp"
 
-    for(int t = 0; t < 1000; t++) {
-        int x = rand() % width;
-        int y = rand() % height;
-        uint32_t rgb = (uint32_t)(*next_image)(x,y,0,0);
-        rgb = (rgb << 8) + (uint32_t)(*next_image)(x,y,0,1);
-        rgb = (rgb << 8) + (uint32_t)(*next_image)(x,y,0,2);
-        hist.insert(rgb);
+struct screenshot_context {
+    int start_from;
+    int frame_skip;
+    int screenshot_limit;
+
+    std::string video_path;
+    std::string screenshot_path;
+
+    int parse_command_line(int argc, char** argv) {
+        namespace po = boost::program_options;
+        po::options_description desc("Options");
+
+        desc.add_options()
+            ("start-from",       po::value<int>()->default_value(60),   "start video this many seconds from the end")
+            ("frame-skip",       po::value<int>()->default_value(5),    "skip frames during video processing")
+            ("screenshot-limit", po::value<int>()->default_value(500),  "histogram limit to keep a screenshot")
+            ("video",            po::value<std::string>(),              "video file to screenshot")
+            ("screenshot",       po::value<std::string>(),              "output image"); 
+
+        po::positional_options_description pos_desc;
+        pos_desc.add("video", 1);
+        pos_desc.add("screenshot", 1);
+        po::variables_map vm;
+
+        try {
+            po::store(po::command_line_parser(argc, argv).options(desc).positional(pos_desc).run(),  vm);
+            po::notify(vm);
+        } catch(po::error& e) {
+            std::cerr << "Error during parsing" << std::endl;
+            std::cerr << desc;
+            return 1;
+        }
+
+        this->start_from      = vm["start-from"].as<int>();
+        this->screenshot_limit = vm["screenshot-limit"].as<int>();
+        this->frame_skip      = vm["frame-skip"].as<int>();
+        this->video_path      = vm["video"].as<std::string>();
+        this->screenshot_path = vm["screenshot"].as<std::string>();
+
+        return 0;
     }
+};
 
-    if(hist.size() < 100) {
-        delete next_image;
-        return last_image;
+class screenshot_video_worker : public video_worker {
+    const  screenshot_context &sc;
+    CImg8  current_screenshot;
+    bool   found_good_screenshot;
 
-    } else {
-        if(last_image != NULL)
-            delete last_image;
-        return next_image;
+    public:
+        virtual void process_frame(const CImg8 &frame, int frame_count);
+
+        const CImg8 &get_screenshot() {
+            return current_screenshot;
+        }
+
+        const bool get_found_good_screenshot() {
+            return found_good_screenshot;
+        }
+
+        screenshot_video_worker(const screenshot_context &sc) : sc(sc), found_good_screenshot(false) {
+        
+        }
+};
+
+void screenshot_video_worker::process_frame(const CImg8 &frame, int frame_count) {
+    if(get_unique_colors(frame) >= sc.screenshot_limit) {
+        found_good_screenshot = true;
+        current_screenshot = frame;
     }
 }
 
 int main(int argc, char *argv[]) {
-  AVFormatContext *pFormatCtx = NULL;
-  int             i, videoStream;
-  AVCodecContext  *pCodecCtx = NULL;
-  AVCodec         *pCodec = NULL;
-  AVFrame         *pFrame = NULL; 
-  AVFrame         *pFrameRGB = NULL;
-  AVPacket        packet;
-  int             frameFinished;
-  int             numBytes;
-  uint8_t         *buffer = NULL;
+    screenshot_context sc;
 
-  AVDictionary    *optionsDict = NULL;
-  struct SwsContext      *sws_ctx = NULL;
- 
-  CImg<uint8_t>* best_image = NULL;
+    sc.parse_command_line(argc, argv);
 
-  if(argc < 3) {
-    printf("Please provide a movie file and an output file\n");
-    return -1;
-  }
-  // Register all formats and codecs
-  av_register_all();
-  
-  // Open video file
-  if(avformat_open_input(&pFormatCtx, argv[1], NULL, NULL)!=0)
-    return -1; // Couldn't open file
-  
-  // Retrieve stream information
-  if(avformat_find_stream_info(pFormatCtx, NULL)<0)
-    return -1; // Couldn't find stream information
-  
-  // Dump information about file onto standard error
-  //av_dump_format(pFormatCtx, 0, argv[1], 0);
-  
-  // Find the first video stream
-  videoStream=-1;
-  for(i=0; i<pFormatCtx->nb_streams; i++)
-    if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
-      videoStream=i;
-      break;
+    screenshot_video_worker worker(sc);
+    video_processor processor;
+
+    processor.iterate(
+        worker,
+        sc.video_path,
+        0,
+        sc.start_from,
+        sc.frame_skip,
+        0,
+        0);
+
+    if (worker.get_found_good_screenshot()) {
+        worker.get_screenshot().save(sc.screenshot_path.c_str());
+    } else {
+        std::cerr << "could not find good screenshot" << endl;
     }
-  if(videoStream==-1)
-    return -1; // Didn't find a video stream
-  
-  // Get a pointer to the codec context for the video stream
-  pCodecCtx=pFormatCtx->streams[videoStream]->codec;
-  
-  // Find the decoder for the video stream
-  pCodec=avcodec_find_decoder(pCodecCtx->codec_id);
-  if(pCodec==NULL) {
-    fprintf(stderr, "Unsupported codec!\n");
-    return -1; // Codec not found
-  }
-  // Open codec
-  if(avcodec_open2(pCodecCtx, pCodec, &optionsDict)<0)
-    return -1; // Could not open codec
-  
-  // Allocate video frame
-  pFrame=av_frame_alloc();
-  
-  // Allocate an AVFrame structure
-  pFrameRGB=av_frame_alloc();
-  if(pFrameRGB==NULL)
-    return -1;
-  
-  // Determine required buffer size and allocate buffer
-  numBytes=avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width,
-                  pCodecCtx->height);
-  buffer=(uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
-
-  sws_ctx =
-    sws_getContext
-    (
-        pCodecCtx->width,
-        pCodecCtx->height,
-        pCodecCtx->pix_fmt,
-        pCodecCtx->width,
-        pCodecCtx->height,
-        PIX_FMT_RGB24,
-        SWS_BILINEAR,
-        NULL,
-        NULL,
-        NULL
-    );
-  
-  // Assign appropriate parts of buffer to image planes in pFrameRGB
-  // Note that pFrameRGB is an AVFrame, but AVFrame is a superset
-  // of AVPicture
-  avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24,
-         pCodecCtx->width, pCodecCtx->height);
-         
-  // seek to the last 30 seconds of the video, if there isn't a valid screenshot there then we don't care
-  // duration - 30*
-  int64_t seek_pos = pFormatCtx->duration - 60*AV_TIME_BASE;
-  if(seek_pos < 0)
-        seek_pos = 0;
-  int err = 0;
-  err = av_seek_frame(pFormatCtx, videoStream, seek_pos, AVSEEK_FLAG_BACKWARD);
-  if(err < 0) {
-        char errcode[1024];
-        av_strerror(err, errcode, 1024);
-        cerr << "error while seeking to " << seek_pos << " with code " << errcode << endl;
-        return 0;
-  }
-         
-  // Read frames and save first five frames to disk
-  i=0;
-  int num_conversions=0;
-  while(av_read_frame(pFormatCtx, &packet)>=0) {
-    // Is this a packet from the video stream?
-    if(packet.stream_index==videoStream) {
-      // Decode video frame
-      avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, 
-               &packet);
-      
-      // Did we get a video frame?
-      if(frameFinished && i % 10 == 0 ) { 
-        // Convert the image from its native format to RGB
-        sws_scale
-        (
-            sws_ctx,
-            (uint8_t const * const *)pFrame->data,
-            pFrame->linesize,
-            0,
-            pCodecCtx->height,
-            pFrameRGB->data,
-            pFrameRGB->linesize
-        );
-
-        best_image = ProcessFrame(pFrameRGB, pCodecCtx->width, pCodecCtx->height, best_image);
-        num_conversions+=1;
-     }
-     i++;
-    }
-    
-    // Free the packet that was allocated by av_read_frame
-    av_free_packet(&packet);
-  }
- 
-  // write the screenshot file if we can
-  if(best_image != NULL) {
-        cerr << "Converted " << num_conversions << " images" << endl;
-        best_image->save_png(argv[2]);
-        delete best_image;
-  } else {
-        cerr << "Could not generate screenshot" << endl;
-  }
-
-  // Free the RGB image
-  av_free(buffer);
-  av_free(pFrameRGB);
-  
-  // Free the YUV frame
-  av_free(pFrame);
-  
-  // Close the codec
-  avcodec_close(pCodecCtx);
-  
-  // Close the video file
-  avformat_close_input(&pFormatCtx);
-  
- return 0;
 }

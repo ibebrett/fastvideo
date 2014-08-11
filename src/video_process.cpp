@@ -1,9 +1,13 @@
 #include "video_process.hpp"
 
-extern "C" {
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
-    #include <libswscale/swscale.h>
+#include <iostream>
+#include <string>
+
+void video_processor::print_error(int err, const std::string &message) {
+    char errcode[1024];
+    av_strerror(err, errcode, 1024);
+
+    std::cerr << message << " "<< errcode << std::endl;
 }
 
 int video_processor::iterate(
@@ -64,7 +68,11 @@ int video_processor::iterate(
     // Open codec
     if(avcodec_open2(pCodecCtx, pCodec, &optionsDict)<0)
         return -1; // Could not open codec
-    
+
+    // set default width and height if they are 0
+    if(width  == 0) width  = pCodecCtx->width;
+    if(height == 0) height = pCodecCtx->height;
+
     // Allocate video frame
     pFrame=av_frame_alloc();
 
@@ -74,8 +82,8 @@ int video_processor::iterate(
         return -1;
 
     // Determine required buffer size and allocate buffer
-    numBytes=avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width,
-                  pCodecCtx->height);
+    numBytes=avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width, pCodecCtx->height);
+
     buffer=(uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
 
     sws_ctx = sws_getContext(
@@ -96,8 +104,29 @@ int video_processor::iterate(
     // of AVPicture
     avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24, width, height);
 
+    // try to seek to the correct place start_from or start_from_back
+    // is specified
+    int64_t seek_pos = 0;
+
+    if(start_from != 0) {
+        seek_pos = start_from*AV_TIME_BASE;
+    } else if(start_from_back != 0) {
+        seek_pos = pFormatCtx->duration - start_from_back*AV_TIME_BASE;
+    }
+    // rescale time
+    seek_pos = av_rescale_q(seek_pos, AV_TIME_BASE_Q,  pFormatCtx->streams[videoStream]->time_base);
+    if(seek_pos < 0)
+        seek_pos = 0;
+
+    if(seek_pos != 0) {
+        std::cerr << " seeking video to " << seek_pos << std::endl;
+        int err = av_seek_frame(pFormatCtx, videoStream, seek_pos, 0);//, AVSEEK_FLAG_BACKWARD);
+        if(err < 0) {
+            print_error(err, "error during seek");
+        }
+    }
+
     // Read frames and save first five frames to disk
-    i=0;
     int frames=0;
     int total_matches=0;
 
@@ -122,17 +151,14 @@ int video_processor::iterate(
                         pFrameRGB->linesize
                     );
 
-                    // allow the worker to process the frame
-
                     // convert into CImg
-                    image_frame.assign(*pFrame->data, 3, width, height, 1, true);
+                    image_frame.assign(*pFrameRGB->data, 3, width, height, 1, true);
                     image_frame.permute_axes("yzcx");
 
                     worker.process_frame(image_frame, frames);
                 }
                 frames++;
             }
-            i++;
         }
 
         // Free the packet that was allocated by av_read_frame

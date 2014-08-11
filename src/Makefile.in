@@ -90,7 +90,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_fvscreenshot_OBJECTS = fvscreenshot-screenshot.$(OBJEXT)
+am_fvscreenshot_OBJECTS = fvscreenshot-screenshot.$(OBJEXT) \
+	fvscreenshot-image_process.$(OBJEXT) \
+	fvscreenshot-video_process.$(OBJEXT)
 fvscreenshot_OBJECTS = $(am_fvscreenshot_OBJECTS)
 am__DEPENDENCIES_1 =
 fvscreenshot_DEPENDENCIES = $(am__DEPENDENCIES_1) \
@@ -277,7 +279,7 @@ top_srcdir = @top_srcdir@
 fvsearch_SOURCES = search.cpp image_process.cpp video_process.cpp image_process.hpp video_process.hpp
 fvsearch_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
 fvsearch_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB) $(X11_LIBS) $(FFMPEG_LIBS)
-fvscreenshot_SOURCES = screenshot.cpp 
+fvscreenshot_SOURCES = screenshot.cpp image_process.cpp video_process.cpp image_process.hpp video_process.hpp
 fvscreenshot_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
 fvscreenshot_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB) $(X11_LIBS) $(FFMPEG_LIBS)
 all: all-am
@@ -371,7 +373,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvscreenshot-image_process.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvscreenshot-screenshot.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvscreenshot-video_process.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvsearch-image_process.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvsearch-search.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvsearch-video_process.Po@am__quote@
@@ -403,6 +407,34 @@ fvscreenshot-screenshot.obj: screenshot.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='screenshot.cpp' object='fvscreenshot-screenshot.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvscreenshot-screenshot.obj `if test -f 'screenshot.cpp'; then $(CYGPATH_W) 'screenshot.cpp'; else $(CYGPATH_W) '$(srcdir)/screenshot.cpp'; fi`
+
+fvscreenshot-image_process.o: image_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvscreenshot-image_process.o -MD -MP -MF $(DEPDIR)/fvscreenshot-image_process.Tpo -c -o fvscreenshot-image_process.o `test -f 'image_process.cpp' || echo '$(srcdir)/'`image_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fvscreenshot-image_process.Tpo $(DEPDIR)/fvscreenshot-image_process.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='image_process.cpp' object='fvscreenshot-image_process.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvscreenshot-image_process.o `test -f 'image_process.cpp' || echo '$(srcdir)/'`image_process.cpp
+
+fvscreenshot-image_process.obj: image_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvscreenshot-image_process.obj -MD -MP -MF $(DEPDIR)/fvscreenshot-image_process.Tpo -c -o fvscreenshot-image_process.obj `if test -f 'image_process.cpp'; then $(CYGPATH_W) 'image_process.cpp'; else $(CYGPATH_W) '$(srcdir)/image_process.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fvscreenshot-image_process.Tpo $(DEPDIR)/fvscreenshot-image_process.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='image_process.cpp' object='fvscreenshot-image_process.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvscreenshot-image_process.obj `if test -f 'image_process.cpp'; then $(CYGPATH_W) 'image_process.cpp'; else $(CYGPATH_W) '$(srcdir)/image_process.cpp'; fi`
+
+fvscreenshot-video_process.o: video_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvscreenshot-video_process.o -MD -MP -MF $(DEPDIR)/fvscreenshot-video_process.Tpo -c -o fvscreenshot-video_process.o `test -f 'video_process.cpp' || echo '$(srcdir)/'`video_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fvscreenshot-video_process.Tpo $(DEPDIR)/fvscreenshot-video_process.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='video_process.cpp' object='fvscreenshot-video_process.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvscreenshot-video_process.o `test -f 'video_process.cpp' || echo '$(srcdir)/'`video_process.cpp
+
+fvscreenshot-video_process.obj: video_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvscreenshot-video_process.obj -MD -MP -MF $(DEPDIR)/fvscreenshot-video_process.Tpo -c -o fvscreenshot-video_process.obj `if test -f 'video_process.cpp'; then $(CYGPATH_W) 'video_process.cpp'; else $(CYGPATH_W) '$(srcdir)/video_process.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fvscreenshot-video_process.Tpo $(DEPDIR)/fvscreenshot-video_process.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='video_process.cpp' object='fvscreenshot-video_process.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvscreenshot_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvscreenshot-video_process.obj `if test -f 'video_process.cpp'; then $(CYGPATH_W) 'video_process.cpp'; else $(CYGPATH_W) '$(srcdir)/video_process.cpp'; fi`
 
 fvsearch-search.o: search.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvsearch_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvsearch-search.o -MD -MP -MF $(DEPDIR)/fvsearch-search.Tpo -c -o fvsearch-search.o `test -f 'search.cpp' || echo '$(srcdir)/'`search.cpp

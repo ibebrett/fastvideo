@@ -1,11 +1,5 @@
 #define __STDC_CONSTANT_MACROS
 
-extern "C" {
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
-    #include <libswscale/swscale.h>
-}
-
 #include <CImg.h>
 
 using namespace cimg_library;
@@ -25,12 +19,14 @@ using namespace cimg_library;
 
 struct search_context {
     int time_limit;
+    int frame_skip;
     int compare_limit;
     int screenshot_limit;
     int match_limit;
     int width;
     int height;
     bool debug_matches;
+    bool debug_video;
 
     std::vector<std::string> screenshot_paths;
     std::string video_path;
@@ -41,13 +37,15 @@ struct search_context {
 
         desc.add_options()
             ("time-limit",       po::value<int>()->default_value(5*60), "maximum time to search video for screenshots")
+            ("frame-skip",       po::value<int>()->default_value(5),    "skip frames during video processing")
             ("compare-limit",    po::value<int>()->default_value(4),    "histogram value threshold for comparing screenshots to video")
             ("screenshot-limit", po::value<int>()->default_value(10),   "histogram value threshold to include screenshot in comparisons")
             ("match-limit",      po::value<int>()->default_value(500),  "value to consider a screenshot and frame matchign")
             ("width",            po::value<int>()->default_value(30),   "width when rescaling images")
             ("height",           po::value<int>()->default_value(30),   "height when rescaling images")
             ("debug-matches",    po::bool_switch(),                     "save matching screenshots")
-            ("video",            po::value<std::string>(),  "video file")
+            ("debug-video",      po::bool_switch(),                     "save all screenshots")
+            ("video",            po::value<std::string>(),              "video file")
             ("screenshots",      po::value<std::vector<std::string> >(), "screenshots"); 
 
         po::positional_options_description pos_desc;
@@ -65,12 +63,14 @@ struct search_context {
         }
 
         this->time_limit       = vm["time-limit"].as<int>();
+        this->frame_skip       = vm["frame-skip"].as<int>();
         this->compare_limit    = vm["compare-limit"].as<int>();
         this->screenshot_limit = vm["screenshot-limit"].as<int>();
         this->match_limit      = vm["match-limit"].as<int>();
         this->width            = vm["width"].as<int>();
         this->height           = vm["height"].as<int>();
         this->debug_matches    = vm["debug-matches"].as<bool>();
+        this->debug_video      = vm["debug-video"].as<bool>();
         this->video_path       = vm["video"].as<std::string>();
         this->screenshot_paths = vm["screenshots"].as<std::vector<std::string> >();
 
@@ -85,7 +85,7 @@ class search_video_worker : public video_worker {
 
     protected:
         void load_screenshots();
-        void save_debug_frames(const CImg8 &sreenshot, const CImg8 &frame, int frame_count);
+        void save_debug_frame(const std::string &prefix,  const CImg8 &frame, int frame_count);
 
     public:
         int get_score() { 
@@ -99,27 +99,28 @@ class search_video_worker : public video_worker {
         }
 };
 
-void search_video_worker::save_debug_frames(const CImg8 &screenshot, const CImg8 &frame, int frame_count) {
+void search_video_worker::save_debug_frame(const std::string &prefix, const CImg8 &frame, int frame_count) {
     std::stringstream ss;
-    ss << frame_count << "-frame.png";
+    ss << frame_count;
+    ss << "-" << prefix << ".png";
     frame.save(ss.str().c_str());
-    ss.str("");
-
-    ss << frame_count << "-screenshot.png";
-    screenshot.save(ss.str().c_str());
 }
 
 void search_video_worker::process_frame(const CImg8 &frame, int frame_count) {
     for(std::vector<CImg8>::const_iterator it = screenshots.begin();
         it != screenshots.end();
         it++) {
-        
+
         int diff = regioned_diff(*it, frame, frame.width(), frame.height(), sc.compare_limit);
+        if(sc.debug_video) {
+            save_debug_frame("video", frame, frame_count);
+        }
         if(diff >= 0 && diff <= sc.match_limit) {
             matched_frames+=1;
             if(sc.debug_matches) {
                 std::cerr << "frames matching " << frame_count << " with diff " << diff << std::endl;
-                save_debug_frames(*it, frame, frame_count);
+                save_debug_frame("video-match", frame, frame_count);
+                save_debug_frame("screenshot-match", *it, frame_count);
             }
             break;
         }
@@ -159,7 +160,7 @@ int main(int argc, char** argv) {
         sc.video_path,
         0,
         0,
-        0,
+        sc.frame_skip,
         sc.width,
         sc.height
     );
