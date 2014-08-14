@@ -76,7 +76,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = fvsearch$(EXEEXT) fvscreenshot$(EXEEXT)
+bin_PROGRAMS = fvsearch$(EXEEXT) fvscreenshot$(EXEEXT) \
+	fvtestimagecompare$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp
@@ -102,6 +103,12 @@ am_fvsearch_OBJECTS = fvsearch-search.$(OBJEXT) \
 	fvsearch-video_process.$(OBJEXT)
 fvsearch_OBJECTS = $(am_fvsearch_OBJECTS)
 fvsearch_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+am_fvtestimagecompare_OBJECTS =  \
+	fvtestimagecompare-test_image_compare.$(OBJEXT) \
+	fvtestimagecompare-image_process.$(OBJEXT)
+fvtestimagecompare_OBJECTS = $(am_fvtestimagecompare_OBJECTS)
+fvtestimagecompare_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -148,8 +155,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(fvscreenshot_SOURCES) $(fvsearch_SOURCES)
-DIST_SOURCES = $(fvscreenshot_SOURCES) $(fvsearch_SOURCES)
+SOURCES = $(fvscreenshot_SOURCES) $(fvsearch_SOURCES) \
+	$(fvtestimagecompare_SOURCES)
+DIST_SOURCES = $(fvscreenshot_SOURCES) $(fvsearch_SOURCES) \
+	$(fvtestimagecompare_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -276,6 +285,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+fvtestimagecompare_SOURCES = test_image_compare.cpp image_process.cpp image_process.hpp
+fvtestimagecompare_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
+fvtestimagecompare_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB) $(X11_LIBS)
 fvsearch_SOURCES = search.cpp image_process.cpp video_process.cpp image_process.hpp video_process.hpp
 fvsearch_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
 fvsearch_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB) $(X11_LIBS) $(FFMPEG_LIBS)
@@ -367,6 +379,10 @@ fvsearch$(EXEEXT): $(fvsearch_OBJECTS) $(fvsearch_DEPENDENCIES) $(EXTRA_fvsearch
 	@rm -f fvsearch$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(fvsearch_OBJECTS) $(fvsearch_LDADD) $(LIBS)
 
+fvtestimagecompare$(EXEEXT): $(fvtestimagecompare_OBJECTS) $(fvtestimagecompare_DEPENDENCIES) $(EXTRA_fvtestimagecompare_DEPENDENCIES) 
+	@rm -f fvtestimagecompare$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(fvtestimagecompare_OBJECTS) $(fvtestimagecompare_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -379,6 +395,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvsearch-image_process.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvsearch-search.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvsearch-video_process.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvtestimagecompare-image_process.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fvtestimagecompare-test_image_compare.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -477,6 +495,34 @@ fvsearch-video_process.obj: video_process.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='video_process.cpp' object='fvsearch-video_process.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvsearch_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvsearch-video_process.obj `if test -f 'video_process.cpp'; then $(CYGPATH_W) 'video_process.cpp'; else $(CYGPATH_W) '$(srcdir)/video_process.cpp'; fi`
+
+fvtestimagecompare-test_image_compare.o: test_image_compare.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvtestimagecompare_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvtestimagecompare-test_image_compare.o -MD -MP -MF $(DEPDIR)/fvtestimagecompare-test_image_compare.Tpo -c -o fvtestimagecompare-test_image_compare.o `test -f 'test_image_compare.cpp' || echo '$(srcdir)/'`test_image_compare.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fvtestimagecompare-test_image_compare.Tpo $(DEPDIR)/fvtestimagecompare-test_image_compare.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='test_image_compare.cpp' object='fvtestimagecompare-test_image_compare.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvtestimagecompare_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvtestimagecompare-test_image_compare.o `test -f 'test_image_compare.cpp' || echo '$(srcdir)/'`test_image_compare.cpp
+
+fvtestimagecompare-test_image_compare.obj: test_image_compare.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvtestimagecompare_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvtestimagecompare-test_image_compare.obj -MD -MP -MF $(DEPDIR)/fvtestimagecompare-test_image_compare.Tpo -c -o fvtestimagecompare-test_image_compare.obj `if test -f 'test_image_compare.cpp'; then $(CYGPATH_W) 'test_image_compare.cpp'; else $(CYGPATH_W) '$(srcdir)/test_image_compare.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fvtestimagecompare-test_image_compare.Tpo $(DEPDIR)/fvtestimagecompare-test_image_compare.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='test_image_compare.cpp' object='fvtestimagecompare-test_image_compare.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvtestimagecompare_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvtestimagecompare-test_image_compare.obj `if test -f 'test_image_compare.cpp'; then $(CYGPATH_W) 'test_image_compare.cpp'; else $(CYGPATH_W) '$(srcdir)/test_image_compare.cpp'; fi`
+
+fvtestimagecompare-image_process.o: image_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvtestimagecompare_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvtestimagecompare-image_process.o -MD -MP -MF $(DEPDIR)/fvtestimagecompare-image_process.Tpo -c -o fvtestimagecompare-image_process.o `test -f 'image_process.cpp' || echo '$(srcdir)/'`image_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fvtestimagecompare-image_process.Tpo $(DEPDIR)/fvtestimagecompare-image_process.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='image_process.cpp' object='fvtestimagecompare-image_process.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvtestimagecompare_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvtestimagecompare-image_process.o `test -f 'image_process.cpp' || echo '$(srcdir)/'`image_process.cpp
+
+fvtestimagecompare-image_process.obj: image_process.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvtestimagecompare_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT fvtestimagecompare-image_process.obj -MD -MP -MF $(DEPDIR)/fvtestimagecompare-image_process.Tpo -c -o fvtestimagecompare-image_process.obj `if test -f 'image_process.cpp'; then $(CYGPATH_W) 'image_process.cpp'; else $(CYGPATH_W) '$(srcdir)/image_process.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fvtestimagecompare-image_process.Tpo $(DEPDIR)/fvtestimagecompare-image_process.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='image_process.cpp' object='fvtestimagecompare-image_process.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(fvtestimagecompare_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o fvtestimagecompare-image_process.obj `if test -f 'image_process.cpp'; then $(CYGPATH_W) 'image_process.cpp'; else $(CYGPATH_W) '$(srcdir)/image_process.cpp'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique

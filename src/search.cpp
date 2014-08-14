@@ -25,6 +25,7 @@ struct search_context {
     int match_limit;
     int width;
     int height;
+    int region_match_limit;
     bool debug_matches;
     bool debug_video;
 
@@ -38,9 +39,10 @@ struct search_context {
         desc.add_options()
             ("time-limit",       po::value<int>()->default_value(5*60), "maximum time to search video for screenshots")
             ("frame-skip",       po::value<int>()->default_value(5),    "skip frames during video processing")
-            ("compare-limit",    po::value<int>()->default_value(4),    "histogram value threshold for comparing screenshots to video")
+            ("compare-limit",    po::value<int>()->default_value(6),    "histogram value threshold for comparing screenshots to video")
             ("screenshot-limit", po::value<int>()->default_value(10),   "histogram value threshold to include screenshot in comparisons")
-            ("match-limit",      po::value<int>()->default_value(500),  "value to consider a screenshot and frame matchign")
+            ("match-limit",      po::value<int>()->default_value(350),  "value to consider a screenshot and frame matching")
+            ("region-match-limit", po::value<int>()->default_value(3),  "the number of regions in a diff that must match")
             ("width",            po::value<int>()->default_value(30),   "width when rescaling images")
             ("height",           po::value<int>()->default_value(30),   "height when rescaling images")
             ("debug-matches",    po::bool_switch(),                     "save matching screenshots")
@@ -69,6 +71,7 @@ struct search_context {
         this->match_limit      = vm["match-limit"].as<int>();
         this->width            = vm["width"].as<int>();
         this->height           = vm["height"].as<int>();
+        this->region_match_limit = vm["region-match-limit"].as<int>();
         this->debug_matches    = vm["debug-matches"].as<bool>();
         this->debug_video      = vm["debug-video"].as<bool>();
         this->video_path       = vm["video"].as<std::string>();
@@ -111,19 +114,27 @@ bool search_video_worker::process_frame(const CImg8 &frame, int frame_count, int
         it != screenshots.end();
         it++) {
 
-        int diff = regioned_diff(*it, frame, frame.width(), frame.height(), sc.compare_limit);
+        int num_regions_matched, num_passed_histogram;
+        int diff = regioned_diff(*it, frame, frame.width(), frame.height(), sc.compare_limit, sc.region_match_limit, sc.match_limit, num_regions_matched, num_passed_histogram);
         if(sc.debug_video) {
             save_debug_frame("video", frame, frame_count);
         }
+        if(sc.debug_matches) {
+            std::cerr << frame_count << " with diff " << diff;
+            std::cerr << " regions matched " << num_regions_matched;
+            std::cerr << " passed histogram " << num_passed_histogram << std::endl;
+        }
+          
         if(diff >= 0 && diff <= sc.match_limit) {
             matched_frames+=1;
             if(sc.debug_matches) {
-                //std::cerr << "frames matching " << frame_count << " with diff " << diff << std::endl;
                 save_debug_frame("video-match", frame, frame_count);
                 save_debug_frame("screenshot-match", *it, frame_count);
             }
             break;
         }
+
+
     }
 
     return sc.time_limit == 0 || curr_time <= sc.time_limit;
