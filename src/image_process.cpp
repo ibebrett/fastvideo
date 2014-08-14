@@ -71,7 +71,7 @@ int regioned_diff(const CImg8 &image1, const CImg8 &image2, int width, int heigh
         }
     }
 
-    if (num_regions_passed > region_match_limit) {
+    if (num_regions_passed < region_match_limit) {
         return -1;
     }
 
