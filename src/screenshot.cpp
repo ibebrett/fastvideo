@@ -20,9 +20,12 @@ struct screenshot_context {
     int frame_skip;
     int screenshot_limit;
     int time_limit;
+    int thumbnail_width;
+    int thumbnail_height;
 
     std::string video_path;
     std::string screenshot_path;
+    std::string thumbnail_path;
 
     int parse_command_line(int argc, char** argv) {
         namespace po = boost::program_options;
@@ -33,6 +36,9 @@ struct screenshot_context {
             ("frame-skip",       po::value<int>()->default_value(5),    "skip frames during video processing")
             ("screenshot-limit", po::value<int>()->default_value(500),  "histogram limit to keep a screenshot")
             ("time-limit",       po::value<int>()->default_value(60*2), "time in seconds to search the video")
+            ("thumbnail",        po::value<std::string>()->default_value(""), "create a thumbnail of the screenshot as well")
+            ("thumbnail-width",  po::value<int>()->default_value(300),  "width of thumbnail")
+            ("thumbnail-height", po::value<int>()->default_value(250),  "height of thumbnail")
             ("video",            po::value<std::string>(),              "video file to screenshot")
             ("screenshot",       po::value<std::string>(),              "output image"); 
 
@@ -56,6 +62,9 @@ struct screenshot_context {
         this->frame_skip      = vm["frame-skip"].as<int>();
         this->video_path      = vm["video"].as<std::string>();
         this->screenshot_path = vm["screenshot"].as<std::string>();
+        this->thumbnail_path  = vm["thumbnail"].as<std::string>();
+        this->thumbnail_width = vm["thumbnail-width"].as<int>();
+        this->thumbnail_height = vm["thumbnail-height"].as<int>();
 
         return 0;
     }
@@ -109,7 +118,13 @@ int main(int argc, char *argv[]) {
         0);
 
     if (worker.get_found_good_screenshot()) {
-        worker.get_screenshot().save(sc.screenshot_path.c_str());
+        CImg8 screenshot = worker.get_screenshot();
+        screenshot.save(sc.screenshot_path.c_str());
+
+        if (sc.thumbnail_path != "") {
+            CImg8 thumbnail = screenshot.resize(sc.thumbnail_width, sc.thumbnail_height);
+            thumbnail.save(sc.thumbnail_path.c_str());
+        }
     } else {
         std::cerr << "could not find good screenshot" << endl;
     }
