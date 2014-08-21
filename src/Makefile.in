@@ -285,6 +285,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+EXTRA_DIST = $(bin_PROGRAMS)
 fvtestimagecompare_SOURCES = test_image_compare.cpp image_process.cpp image_process.hpp
 fvtestimagecompare_CPPFLAGS = $(X11_CFLAGS) $(FFMPEG_CFLAGS)
 fvtestimagecompare_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB) $(X11_LIBS)
